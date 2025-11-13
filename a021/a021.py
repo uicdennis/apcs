@@ -16,6 +16,8 @@
 # 2222222222222222222222222 * 1111111111111111111111111 = 2469135802469135802469135308641975308641975308642
 # 2222222222222222222222222 / 1111111111111111111111111 = 2
 
+import pytest
+
 def quick_solution(formula: str) -> str:
     sz = formula.replace('/', '//')
     return str(eval(sz))
@@ -30,6 +32,7 @@ class BigInt():
             num = num[1:]
         else:
             self._positive = True
+        num = num[:-1].lstrip('0') + num[-1]    # solve redundant leading 0
         self._num = num
         self._digits = len(num)
 
@@ -134,9 +137,10 @@ class BigInt():
                     borrow = 0
             else:
                 temp = int(ch) - borrow
-                borrow = 0
+                if temp >= 0:
+                    borrow = 0
 
-            # 最高為相減為0不紀錄
+            # 最高位相減為0不紀錄
             # 相等位數相減會有問題
             # if i != len(bg) - 1 or temp != 0:
             #     ans.append(str(temp%10))
@@ -237,7 +241,7 @@ class BigInt():
             while num >= other:
                 num = num - other
                 q += 1
-            if q == 0:
+            if q == 0 and i < other._digits:
                 carry = carry + num._num[i]
             else:
                 ans.append(str(q))
@@ -254,6 +258,7 @@ class BigInt():
         return result
 
 #################################
+
 class TestCompare():
     def test_different_digits(self):
         a = BigInt('333')
@@ -307,11 +312,11 @@ class TestCompare():
         assert (BigInt(a)+BigInt(b)).value == quick_solution(a + ' + ' + b)
     def test_add_3(self):
         a = '66'
-        b = '234'
+        b = '0'
         assert (BigInt(a)+BigInt(b)).value == quick_solution(a + ' + ' + b)
     def test_add_4(self):
-        a = '99876'
-        b = '321'
+        a = '321'
+        b = '99876'
         assert (BigInt(a)+BigInt(b)).value == quick_solution(a + ' + ' + b)
 
     def test_minus_1(self):
@@ -320,7 +325,7 @@ class TestCompare():
         assert (BigInt(a)-BigInt(b)).value == quick_solution(a + ' - ' + b)
     def test_minus_2(self):
         a = '1234'
-        b = '66'
+        b = '0'
         assert (BigInt(a)-BigInt(b)).value == quick_solution(a + ' - ' + b)
     def test_minus_3(self):
         a = '66'
@@ -331,23 +336,27 @@ class TestCompare():
         b = '321'
         assert (BigInt(a)-BigInt(b)).value == quick_solution(a + ' - ' + b)
 
-    def test_multipe_1(self):
-        a = '99876'
-        b = '8888'
-        assert (BigInt(a)*BigInt(b)).value == quick_solution(a + ' * ' + b)
-    def test_multipe_2(self):
-        a = '-567'
-        b = '93218'
-        assert (BigInt(a)*BigInt(b)).value == quick_solution(a + ' * ' + b)
-
-    def test_divde_1(self):
-        a = '99876'
-        b = '609'
-        assert (BigInt(a)//BigInt(b)).value == quick_solution(a + ' / ' + b)
-    def test_divde_2(self):
-        a = '-567'
-        b = '3'
-        assert (BigInt(a)//BigInt(b)).value == quick_solution(a + ' / ' + b)
+@pytest.mark.parametrize("op1, op2", \
+                         [('3', '3'), \
+                          ('1224', '612'), \
+                          ('1234', '1234'), \
+                          ('240', '-24'), \
+                          ('100000000', '10'), \
+                          ('240000000024', '24'), \
+                          ('-567', '3'), \
+                          ('234', '66'), \
+                          ('99876', '609'), \
+                          ('2222222222222222222222222', '1111111111111111111111111'), \
+                          ('12', '3')])
+class TestOperation():
+    def test_add(self, op1, op2):
+        assert (BigInt(op1)+BigInt(op2)).value == quick_solution(op1 + ' + ' + op2)
+    def test_minus(self, op1, op2):
+        assert (BigInt(op1)-BigInt(op2)).value == quick_solution(op1 + ' - ' + op2)
+    def test_multiple(self, op1, op2):
+        assert (BigInt(op1)*BigInt(op2)).value == quick_solution(op1 + ' * ' + op2)
+    def test_divid(self, op1, op2):
+        assert (BigInt(op1)//BigInt(op2)).value == quick_solution(op1 + ' / ' + op2)
 
 def test_big():
     a = BigInt('2222222222222222222222222')
@@ -367,32 +376,17 @@ if __name__ == "__main__":
 
     # test_big()
 
-    # a = BigInt('99876')
-    # b = BigInt('321')
-    # c = a * b
-    # print(c)
-    # a = '-567'
-    # b = '93218'
-    # # assert (BigInt(a)*BigInt(b)) == quick_solution(a + ' * ' + b)
-    # sz = a + ' * ' + b
-    # print(sz)
-    # ans = quick_solution(sz)
-    # print(ans)
-    # # print(type(ans))
-    # d = BigInt(a) * BigInt(b)
-    # print(d)
-
-    # a = '234'
-    # b = '234'
-    # c = BigInt(a) - BigInt(b)
-    # a = '4'
-    # b = '4'
-    # d = BigInt(a) - BigInt(b)
-
-    a = '99876'
-    b = '609'
+    a = '100000000'
+    b = '10'
+    # ('100000000', '10'), \
+    # ('240000000024', '24'), \
+    # a = '99876'
+    # b = '609'
     # a = '-567'
     # b = '3'
+    c = BigInt(a) - BigInt(b)
+    d = quick_solution(a + ' - ' + b)
+
     e = BigInt(a) // BigInt(b)
     f = quick_solution(a + ' / ' + b)
     print('e = ', e)
